@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Household Water Demand Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#dff3ff,#a8d8ff);
+    margin:0;
+    padding:20px;
+}
+.container{
+    max-width:900px;
+    margin:auto;
+}
+h1{
+    text-align:center;
+    color:#003f66;
+}
+.card{
+    background:white;
+    padding:20px;
+    margin-bottom:20px;
+    border-radius:10px;
+    box-shadow:0 5px 12px rgba(0,0,0,0.1);
+}
+h3{
+    color:#006699;
+}
+label{
+    display:block;
+    margin-top:10px;
+}
+input,select{
+    width:100%;
+    padding:7px;
+    margin-top:4px;
+}
+button{
+    width:100%;
+    padding:12px;
+    background:#0077cc;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+}
+button:hover{
+    background:#005fa3;
+}
+.result{
+    background:#e6f7ff;
+    padding:20px;
+    border-radius:10px;
+}
+.hidden{
+    display:none;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h1>💧 Household Water Demand Calculator <hr><a>Made by Karan Kaushal for Research Purpose Only</a></h1>
+
+
+<!-- GENERAL -->
+<div class="card">
+<h3>General</h3>
+<label>Number of People</label>
+<input type="number" id="people" value="" min="1">
+</div>
+
+<!-- BATH -->
+<div class="card">
+<h3>Bathing</h3>
+
+<label>Bath Type</label>
+<select id="bathType" onchange="toggleBath()">
+<option value="shower">Shower</option>
+<option value="bucket">Bucket & Mug</option>
+</select>
+
+<div id="showerSection">
+<label>Average Shower Time (minutes)</label>
+<input type="number" id="showerTime" value="" min="0">
+</div>
+
+<div id="bucketSection" class="hidden">
+<label>Number of Buckets (10 L each)</label>
+<input type="number" id="buckets" value="" min="0">
+</div>
+</div>
+
+<!-- TOILET -->
+<div class="card">
+<h3>Toilets</h3>
+<label>Flushes per person per day</label>
+<input type="number" id="flushes" value="" min="0">
+</div>
+
+<!-- TAPS -->
+<div class="card">
+<h3>Taps / Faucets</h3>
+<label>Uses per person per day</label>
+<input type="number" id="tapUses" value="" min="0">
+
+<label>Average time per use (minutes)</label>
+<input type="number" id="tapTime" value="" min="0">
+
+<label>Is tap continuously running?</label>
+<select id="continuousTap">
+<option value="yes">Yes</option>
+<option value="no">No</option>
+</select>
+</div>
+
+<!-- KITCHEN -->
+<div class="card">
+<h3>Kitchen</h3>
+<label>Dishes washed per day</label>
+<input type="number" id="dishes" value="" min="0">
+
+<label>Time water runs per wash (minutes)</label>
+<input type="number" id="dishTime" value="" min="0">
+
+<label>Fruit/Vegetable wash time per day (minutes)</label>
+<input type="number" id="vegTime" value="" min="0">
+</div>
+
+<!-- LAUNDRY -->
+<div class="card">
+<h3>Laundry</h3>
+<label>Use washing machine?</label>
+<select id="washingMachine">
+<option value="yes">Yes</option>
+<option value="no">No</option>
+</select>
+
+<label>Washing machine uses per day</label>
+<input type="number" id="washUses" value="" min="0">
+</div>
+
+<!-- FLOOR -->
+<div class="card">
+<h3>Floor Cleaning</h3>
+<label>Cleaning times per day</label>
+<input type="number" id="floorClean" value="" min="0">
+
+<label>Number of rooms</label>
+<input type="number" id="rooms" value="" min="0">
+</div>
+
+<!-- OUTDOOR -->
+<div class="card">
+<h3>Outdoor Use</h3>
+<label>Lawn watering time per day (minutes)</label>
+<input type="number" id="lawnTime" value="" min="0">
+
+<label>Car washing time per week (minutes)</label>
+<input type="number" id="carTime" value="" min="0">
+</div>
+
+<button onclick="calculate()">Calculate Water Demand</button>
+
+<div class="card result" id="result"></div>
+
+</div>
+
+<script>
+
+// Safe number function
+function getVal(id){
+    let v = parseFloat(document.getElementById(id).value);
+    return isNaN(v) ? 0 : v;
+}
+
+function toggleBath(){
+    let type = document.getElementById("bathType").value;
+    document.getElementById("showerSection").classList.toggle("hidden", type !== "shower");
+    document.getElementById("bucketSection").classList.toggle("hidden", type !== "bucket");
+}
+
+function calculate(){
+
+let people = getVal("people");
+if(people <= 0){
+    alert("Enter valid number of people");
+    return;
+}
+
+// Bath
+let bathType = document.getElementById("bathType").value;
+let bathWater = (bathType === "shower")
+? people * getVal("showerTime") * 5
+: people * getVal("buckets") * 10;
+
+// Toilet
+let toiletWater = people * getVal("flushes") * 7.5;
+
+// Tap
+let tapFactor = document.getElementById("continuousTap").value === "yes" ? 1 : 0.7;
+let tapWater = people * getVal("tapUses") * getVal("tapTime") * 5 * tapFactor;
+
+// Kitchen
+let kitchenWater =
+(getVal("dishes") * getVal("dishTime") * 5) +
+(getVal("vegTime") * 5);
+
+// Laundry
+let laundryWater =
+document.getElementById("washingMachine").value === "yes"
+? getVal("washUses") * 20 : 0;
+
+// Floor
+let floorWater = getVal("floorClean") * getVal("rooms") * 10;
+
+// Outdoor
+let lawnWater = getVal("lawnTime") * 15;
+let carWater = (getVal("carTime") * 20) / 7;
+
+// Total
+let total = bathWater + toiletWater + tapWater + kitchenWater +
+            laundryWater + floorWater + lawnWater + carWater;
+
+let perCapita = total / people;
+
+// Status
+let status;
+if(perCapita <= 100){
+    status = "Excellent (Low Consumption)";
+}
+else if(perCapita <= 135){
+    status = "Within Recommended Limit (135 LPCD)";
+}
+else if(perCapita <= 180){
+    status = "Moderate – Try Reducing Usage";
+}
+else{
+    status = "High Water Consumption";
+}
+
+// Percentage function
+function pct(x){
+    return total > 0 ? ((x/total)*100).toFixed(1) : 0;
+}
+
+// Recommendations
+let rec = "";
+if(bathWater > total*0.3) rec += "• Reduce shower time or use bucket bath.<br>";
+if(toiletWater > total*0.25) rec += "• Install dual flush system.<br>";
+if(tapWater > total*0.2) rec += "• Turn off tap while brushing.<br>";
+if(lawnWater > total*0.15) rec += "• Water lawn early morning.<br>";
+if(carWater > total*0.1) rec += "• Use bucket instead of hose for car wash.<br>";
+if(rec === "") rec = "Your usage is efficient. Keep it up 👍";
+
+// Output
+document.getElementById("result").innerHTML =
+"<h2>Total Daily Water Demand: " + total.toFixed(2) + " Liters</h2>" +
+"<b>Per Capita Consumption:</b> " + perCapita.toFixed(2) + " LPCD<br>" +
+"<b>Status:</b> " + status + "<br><br>" +
+
+"<h3>Detailed Breakdown</h3>" +
+"Bath: " + bathWater.toFixed(1) + " L (" + pct(bathWater) + "%)<br>" +
+"Toilet: " + toiletWater.toFixed(1) + " L (" + pct(toiletWater) + "%)<br>" +
+"Taps: " + tapWater.toFixed(1) + " L (" + pct(tapWater) + "%)<br>" +
+"Kitchen: " + kitchenWater.toFixed(1) + " L (" + pct(kitchenWater) + "%)<br>" +
+"Laundry: " + laundryWater.toFixed(1) + " L (" + pct(laundryWater) + "%)<br>" +
+"Floor Cleaning: " + floorWater.toFixed(1) + " L (" + pct(floorWater) + "%)<br>" +
+"Lawn: " + lawnWater.toFixed(1) + " L (" + pct(lawnWater) + "%)<br>" +
+"Car Washing (Daily Avg): " + carWater.toFixed(1) + " L (" + pct(carWater) + "%)<br><br>" +
+
+"<div style='background:#fff3cd;padding:10px;border-radius:6px;'>" +
+"<b>Water Saving Recommendations:</b><br>" + rec +
+"</div>";
+
+}
+
+</script>
+
+</body>
+</html>
